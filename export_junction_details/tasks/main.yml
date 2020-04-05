@@ -1,0 +1,36 @@
+- name: ansible create local directory example
+  local_action:
+    module: file
+    path: "{{ export_dir }}/{{ item.0.item.id }}"
+    state: directory 
+  register: ret_obj
+  when: junction_ret_obj is defined
+  with_subelements:
+    - "{{ junction_ret_obj['results'] }}"
+    - data
+
+
+- name: Export Junctions in Reverse Proxy
+  isam:
+    appliance: "{{ inventory_hostname }}"
+    username:  "{{ username }}"
+    password:  "{{ password }}"
+    lmi_port:  "{{ lmi_port }}"
+    log:       "{{ log_level }}"
+    force:     "{{ force }}"
+    action: ibmsecurity.isam.web.reverse_proxy.junctions.export
+    isamapi:
+      reverseproxy_id: "{{ item.0.item.id }}"
+      junctionname: "{{ item.1.id }}"
+      export_dir: "{{ export_dir }}"
+      junction_prefix: "{{ junction_prefix }}"
+  register: ret_obj
+
+  when: junction_ret_obj is defined
+  with_subelements:
+    - "{{ junction_ret_obj['results'] }}"
+    - data
+
+- name: Set variable for use by rest of playbook
+  set_fact:
+    junction_detail_ret_obj: "{{ ret_obj }}"
